@@ -1,0 +1,22 @@
+﻿@model ServerconfigModel
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<h1>Admin</h1>
+
+ <h5 class="adminpanelvalue">Ram used: <var id="ramused">@Model.CurrentRam</var> KB</h5>
+ <h5 class="adminpanelvalue">Maxplayers: <var id="mplayers" contenteditable="true">@Model.Maxplayers</var></h5>
+ <h5 class="adminpanelvalue">TickRate Max: <var id="trMax" contenteditable="true">@Model.TickMax</var></h5>
+ <h5 class="adminpanelvalue">TickRate Min: <var id="trMin" contenteditable="true">@Model.Tickmin</var></h5>
+ <h5 class="adminpanelvalue">TickRate now: <var id="trnow" contenteditable="true">@Model.Currenttickrate</var></h5>
+ <h5 class="adminpanelvalue">Port: <var id="port" contenteditable="true">@Model.Port</var></h5>
+ <h5 class="adminpanelvalue">publicise: <input type="checkbox" id="public" /></h5>
+ <button onclick="SendReloadConfig()">Reload Server config</button>
+
+
+
+
+
+  <script src="~/js/Adminpage.js" asp-append-version="true"></script>
+
