@@ -38,7 +38,7 @@ namespace FrostyPipeServer.Controllers
         [Authorize]
         public IActionResult Players()
         {
-            return View(new PlayersModel(Server.Players.Values.ToList<Player>()));
+            return View(new PlayersModel(Server.Players.Values.ToList()));
         }
         [Authorize]
         public IActionResult Objects()

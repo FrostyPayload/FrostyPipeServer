@@ -2,7 +2,7 @@
 using System.Collections;
 namespace FrostyPipeServer.Models
 {
-    public class Player
+    public class PlayersPage
     {
         public uint Id { get; set; }   
         public string Name { get; set; }
