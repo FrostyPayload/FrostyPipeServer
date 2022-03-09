@@ -1,0 +1,52 @@
+﻿@model PlayersModel
+@{
+    ViewData["Title"] = "Players";
+}
+
+<h1 class="pagetitle">Live Player Management</h1>
+<div>
+@for(var i =0;i<Model.Players.Count;i++)
+    {
+        
+        <button type="button" class="collapsible">@Model.Players[i].Username</button>
+    <div class="content">
+
+         <div class="boxleft">
+        <h5>Valve ID:@Model.Players[i].RiderID</h5>
+        <h5>Rider Model:@Model.Players[i].Ridermodel</h5>
+        <h5>@Model.Players[i].PlayerObjects.Count Custom objects spawned</h5>
+        <h5>Riding at: @Model.Players[i].MapName</h5>
+        <h5>Ping: @Model.Players[i].ping</h5>
+        <h5>Packet rate: @Model.Players[i].Packetrate per sec</h5>
+        </div>
+        <div class="boxright">
+        <button id="@Model.Players[i].RiderID" type="button" class="banbutton" onclick="BanriderSend(this.id)">Ban rider</button>
+        <h5 contenteditable="true" id="@Model.Players[i].RiderID bantime">1</h5><h5> Mins to ban</h5>
+        </div>
+
+        <button type="button" class="collapsible">Packets</button>
+        
+        <div class="content" id="here">
+            foreach(FrostyPipeServer.ServerFiles.Player t in Model.Players)
+            {
+                foreach(DateTime dt in t.receiveTimes)
+                {
+                    <h5 class="Packettime" id="@Model.Players[i].RiderID">dt.ToLongTimeString()</h5>
+                }
+            }
+            
+        </div>
+
+
+
+        <button type="button" class="collapsible" id="@Model.Players[i].RiderID" onclick="GetGarageSetup(this.id)">Garage Setup</button>
+        <div class="content" id="garagedata @Model.Players[i].RiderID">
+            
+        </div>
+       
+    </div>  
+}
+</div>
+
+<script src="/js/Players.js"></script>
+

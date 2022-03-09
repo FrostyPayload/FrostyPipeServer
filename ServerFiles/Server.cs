@@ -133,7 +133,6 @@ namespace FrostyPipeServer.ServerFiles
 
         }
 
-        
         public static void Publicise()
         {
             // update string data either way
@@ -306,7 +305,7 @@ namespace FrostyPipeServer.ServerFiles
             return address;
         }
 
-        static int GetAveragePing()
+        public static int GetAveragePing()
         {
             List<int> pings = new List<int>();
             foreach (Player p in Players.Values)
@@ -385,7 +384,15 @@ namespace FrostyPipeServer.ServerFiles
             Console.Write("Booting...");
 
             // Master call to load GameNetworkingSockets.dll and begin Valve's system
-            Library.Initialize();
+            try
+            {
+              Library.Initialize();
+            }
+            catch (Exception x )
+            {
+                Console.WriteLine("Valve init error : " + x);
+                throw;
+            }
             utils = new NetworkingUtils();
 
             // the servers socket being created
@@ -449,7 +456,16 @@ namespace FrostyPipeServer.ServerFiles
             utils.SetStatusCallback(status);
             Address address = new Address();
             address.SetAddress("::0", (ushort)int.Parse(Port));
-            uint listenSocket = Connection.CreateListenSocket(ref address);
+            try
+            {
+
+              uint listenSocket = Connection.CreateListenSocket(ref address);
+            }
+            catch (Exception x)
+            {
+                Console.Write("Socket error: " + x);
+                throw;
+            }
 
 
             Console.WriteLine("Ready and listening for connections..");
@@ -462,13 +478,14 @@ namespace FrostyPipeServer.ServerFiles
             const int maxMessages = 256;
             NetworkingMessage[] netMessages = new NetworkingMessage[maxMessages];
 
-            // if public selected, start timer
+            // if public selected, start timer and do inital post straight away
             if (Public_server)
             {
                 PubliciseWatch.Start();
                 Publicise();
             }
-            Stopwatch timer = Stopwatch.StartNew();
+            DateTime nextloop = DateTime.Now;
+            double timeout = 0;
             // Server Loop
             while (isRunning)
             {
@@ -532,8 +549,6 @@ namespace FrostyPipeServer.ServerFiles
                             }
 
                         }
-
-
                         SetPlayersLastPing(netMessage);
                         netMessage.Destroy();
                     }
@@ -545,6 +560,12 @@ namespace FrostyPipeServer.ServerFiles
 
                 if (Public_server)
                 {
+                    if (!PubliciseWatch.IsRunning)
+                    {
+                        PubliciseWatch.Reset();
+                        PubliciseWatch.Start();
+                    }
+
                     // do publicising
                     if (PubliciseWatch.Elapsed.TotalSeconds >= 120)
                     {
@@ -554,12 +575,29 @@ namespace FrostyPipeServer.ServerFiles
                     }
 
                 }
+                else if (PubliciseWatch.IsRunning)
+                {
+                    PubliciseWatch.Stop();
+                    PubliciseWatch.Reset();
+                }
 
                 Servermanager.Update();
-                Thread.Sleep((Servermanager.MSPerTickCurrent - timer.ElapsedMilliseconds) > 0 ? (int)(Servermanager.MSPerTickCurrent - timer.ElapsedMilliseconds) : 1);
-                timer.Reset();
-                timer.Start();
-
+                double processtime = (DateTime.Now - nextloop).TotalMilliseconds;
+                Servermanager.lastloopreceivethread = processtime;
+                nextloop = nextloop.AddMilliseconds(Servermanager.MSPerTickTarget);
+                timeout = (nextloop - DateTime.Now).TotalMilliseconds;
+                
+                if (DateTime.Now < nextloop)
+                {
+                   Servermanager.lastloopreceivethreadtimeout = timeout;
+                   Thread.Sleep((int)timeout);
+                }
+                else
+                {
+                    nextloop = DateTime.Now;
+                    nextloop.AddMilliseconds(Servermanager.MSPerTickTarget);
+                }
+               
             }
 
 
@@ -592,12 +630,17 @@ namespace FrostyPipeServer.ServerFiles
         {
             if (Players.ContainsKey(mess.connection))
             {
-                Players[mess.connection].ping = GetConnectionStatus(mess.connection);
+                Players[mess.connection].ping = GetConnectionPing(mess.connection);
+                Players[mess.connection].receiveTimes.Add(DateTime.Now);
+                if (Players[mess.connection].receiveTimes.Count > 10)
+                {
+                    Players[mess.connection].receiveTimes.RemoveAt(0);
+                }
             }
 
         }
 
-        static int GetConnectionStatus(uint conn)
+        static int GetConnectionPing(uint conn)
         {
             ConnectionStatus _status = new ConnectionStatus();
             Connection.GetQuickConnectionStatus(conn, ref _status);

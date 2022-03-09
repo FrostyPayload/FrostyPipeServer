@@ -25,10 +25,8 @@ namespace FrostyPipeServer.ServerFiles
         public static List<string> BannedWords = new List<string>();
         public static List<string> BanMessageAlternates = new List<string>();
         public static string AdminPassword = "DaveMirra";
-
-
-
-
+        public static string Garagepath = "PIPE_Data/GarageContent/";
+        public static string GarageSavespath =  Rootdir + "GarageContent/GarageSaves/";
 
 
 
@@ -51,7 +49,10 @@ namespace FrostyPipeServer.ServerFiles
             {
                 Directory.CreateDirectory(UpdateDir);
             }
-
+            if (!Directory.Exists(GarageSavespath))
+            {
+                Directory.CreateDirectory(GarageSavespath);
+            }
 
             BannedWords = new List<string>
             {
@@ -128,18 +129,20 @@ namespace FrostyPipeServer.ServerFiles
             Server.posturl = Server.Config.POST;
             Server.puturl = Server.Config.PUT;
             Server.APIKEY = Server.Config.KEY;
-
+            System.Environment.SetEnvironmentVariable("ASPNETCORE_URLS", Server.Config.PortalUrl);
+            Console.WriteLine("Set Url: " + System.Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
 
 
         }
 
         public static void SaveServerData()
         {
-            SaveData data = new SaveData(BannedWords, Server.BanProfiles);
-            StreamWriter swriter = new StreamWriter("Config/ServerConfig.json");
-            JsonWriter jwriter = new JsonTextWriter(swriter);
-            JsonSerializer serial = new JsonSerializer();
-            serial.Serialize(jwriter, data);
+           
+            string jsonbanwords = JsonConvert.SerializeObject(BannedWords);
+            File.WriteAllText("Config/Banwords.json", jsonbanwords);
+
+            string jsonbanprofiles = JsonConvert.SerializeObject(Server.BanProfiles);
+            File.WriteAllText("Config/Banprofiles.json", jsonbanprofiles);
         }
 
         public static void BanPlayer(string _username, string IP, uint connid, int mins)
@@ -148,6 +151,7 @@ namespace FrostyPipeServer.ServerFiles
 
             Server.BanProfiles.Add(new BanProfile(IP, _username, connid, Time_of_release));
             SaveServerData();
+            ServerSend.DisconnectPlayer("Banned until " + Time_of_release.ToString() + " UTC", connid);
 
         }
 
@@ -294,7 +298,7 @@ namespace FrostyPipeServer.ServerFiles
                 if (!Directory.Exists(Rootdir + _mypath)) Directory.CreateDirectory(Rootdir + _mypath);
 
                 FileInfo Finfo = FileNameMatcher(new DirectoryInfo(Rootdir + _mypath).GetFiles(), name);
-                FileInfo TempFinfo = FileNameMatcher(new DirectoryInfo(TempDir + _mypath).GetFiles(), name + ".temp");
+                FileInfo TempFinfo = FileNameMatcher(new DirectoryInfo(TempDir + _mypath).GetFiles(), name + ".json");
 
                 if (Finfo != null)
                 {
@@ -313,13 +317,15 @@ namespace FrostyPipeServer.ServerFiles
                 {
                     TempFile Temp = new TempFile();
                     Temp.ByteLengthOfFile = Totalbytes;
-                    File.WriteAllText(TempDir + _mypath + name + ".temp", JsonConvert.SerializeObject(Temp));
+                    File.WriteAllText(TempDir + _mypath + name + ".json", JsonConvert.SerializeObject(Temp));
 
                 }
                 else
                 {
-                    name = TempFinfo.Name.Replace(".temp", "");
+                    name = TempFinfo.Name.Replace(".json", "");
                 }
+                
+                
 
 
 
@@ -390,7 +396,7 @@ namespace FrostyPipeServer.ServerFiles
                     {
                         Console.WriteLine("Dumped file, duplicate found");
                     }
-                    File.Delete(TempDir + _mypath + name + ".temp");
+                    File.Delete(TempDir + _mypath + name + ".json");
 
                     // Tell Anyone that i've asked to send this file that i have it now ,if still online
                     foreach (uint id in InIndex.PlayersRequestedFrom)
@@ -411,9 +417,11 @@ namespace FrostyPipeServer.ServerFiles
                 else
                 {
                     // update temp file
-                    TempFile _temp = JsonConvert.DeserializeObject<TempFile>(TempDir + _mypath + name + ".temp");
+                    Console.Write($"Reading json from {TempDir + _mypath + name + ".json"}");
+                    string jsonpath = (TempDir + _mypath + name + ".json").ToString();
+                    TempFile _temp = JsonConvert.DeserializeObject<TempFile>(File.ReadAllText(jsonpath));
                     _temp.PacketNumbersStored.Add(SegNo);
-                    File.WriteAllText(TempDir + _mypath + name + ".temp", JsonConvert.SerializeObject(_temp));
+                    File.WriteAllText(TempDir + _mypath + name + ".json", JsonConvert.SerializeObject(_temp));
 
                 }
 
@@ -469,9 +477,9 @@ namespace FrostyPipeServer.ServerFiles
                         Console.WriteLine($"File not located, looking for temp data..");
 
                         List<int> Packetsiown = new List<int>();
-                        if (File.Exists(TempDir + mydir + Filename + ".temp"))
+                        if (File.Exists(TempDir + mydir + Filename + ".json"))
                         {
-                            TempFile temp = JsonConvert.DeserializeObject<TempFile>(TempDir + mydir + Filename + ".temp");
+                            TempFile temp = JsonConvert.DeserializeObject<TempFile>(TempDir + mydir + Filename + ".json");
 
                             foreach (int seg in temp.PacketNumbersStored)
                             {
@@ -504,25 +512,6 @@ namespace FrostyPipeServer.ServerFiles
 
 
             }
-
-        }
-
-
-        public static SaveList DeserialiseGarage(byte[] save)
-        {
-            try
-            {
-
-                string bytesasstring = Encoding.UTF8.GetString(save);
-                return JsonConvert.DeserializeObject<SaveList>(bytesasstring);
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message + " : " + e.StackTrace);
-                return null;
-            }
-
 
         }
 

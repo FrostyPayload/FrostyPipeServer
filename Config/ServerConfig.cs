@@ -12,6 +12,7 @@
         public string POST;
         public string PUT;
         public string KEY;
+        public string PortalUrl;
 
 
         public ServerConfig(bool createdefault = false)
@@ -28,6 +29,7 @@
                 POST = "https://pipe-bmx-api.herokuapp.com/post";
                 PUT = "https://pipe-bmx-api.herokuapp.com/update";
                 KEY = "PIPE_BMX_Multiplayer_FROSTYP";
+                PortalUrl = "http://*:5000;https://*:5001";
 
             }
         }

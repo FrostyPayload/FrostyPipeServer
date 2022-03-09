@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <UserSecretsId>aspnet-FrostyPipeServer-6C10A6E9-287C-494A-BFF9-EDBC0037E4AF</UserSecretsId>
     <CopyRefAssembliesToPublishDirectory>false</CopyRefAssembliesToPublishDirectory>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -17,18 +17,26 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.21" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="3.1.21" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.5" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Config\" />
-    <Folder Include="ServerFiles\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\FrostyP_Game_Manager\Dlls\Assembly-CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="BikeWorkshopMenu">
-      <HintPath>..\TheGarage\Garage\BikeMenu UnityProj\BikeMenu UnityProj\obj\Release\BikeWorkshopMenu.dll</HintPath>
+      <HintPath>..\..\..\TheGarage\Garage\BikeMenu UnityProj\BikeMenu UnityProj\obj\Release\BikeWorkshopMenu.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+      <CopyLocal>True</CopyLocal>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\TheGarage\DllsForReferencing\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="Valve">
       <HintPath>ServerFiles\Valve.dll</HintPath>

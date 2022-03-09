@@ -54,7 +54,6 @@ namespace FrostyPipeServer
             app.UseStaticFiles();
 
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -65,6 +64,7 @@ namespace FrostyPipeServer
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+            
         }
     }
 }

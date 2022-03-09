@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using Newtonsoft.Json;
 
 namespace FrostyPipeServer.ServerFiles
 {
@@ -258,8 +259,8 @@ namespace FrostyPipeServer.ServerFiles
 
 
                     // garage
-                    _packet.Write(_player.Gear.Garagesave.Length);
-                    _packet.Write(_player.Gear.Garagesave);
+                    _packet.Write(_player.Gear.garagexml);
+                    _packet.Write(_player.Gear.presetname);
 
                     _packet.Write(_player.PlayerObjects.Count);
                     if (_player.PlayerObjects.Count > 0)
@@ -380,8 +381,8 @@ namespace FrostyPipeServer.ServerFiles
                                 }
 
                                 // garage
-                                _packet.Write(_player.Gear.Garagesave.Length);
-                                _packet.Write(_player.Gear.Garagesave);
+                                _packet.Write(_player.Gear.garagexml);
+                                _packet.Write(_player.Gear.presetname);
 
 
                                 // Park

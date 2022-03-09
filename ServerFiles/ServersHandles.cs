@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Numerics;
 using Valve.Sockets;
+using Newtonsoft.Json;
 
 namespace FrostyPipeServer.ServerFiles
 {
@@ -128,7 +129,7 @@ namespace FrostyPipeServer.ServerFiles
             {
                 if (Server.Players.TryGetValue(_from, out Player _player))
                 {
-                    // rider
+                    // rider  ----------------------------------------------------------
 
                     Vector3 pos = _packet.ReadVector3();
                     Vector3 rot = _packet.ReadVector3();
@@ -158,35 +159,22 @@ namespace FrostyPipeServer.ServerFiles
                         capforward = _packet.ReadBool();
                     }
 
-                    // bike ( garage )
-
-                    int bytecount = _packet.ReadInt();
-                    if (bytecount == 0)
+                    // bike ( garage )   ----------------------------------------------------------
+                    string xmlgaragestring = _packet.ReadString();
+                    string presetname = _packet.ReadString();   
+                    bool success = Servermanager.SaveGaragePreset(xmlgaragestring, _from,presetname);
+                    SaveList glist = Servermanager.GarageDeserialize(presetname, _from);
+                    if(glist == null)
                     {
-                        ServerSend.DisconnectPlayer("Server encountered error reading your Garage save data, check that your preset works as intended and that your logging on messages show the correct preset being sent", _from);
+                        Console.WriteLine("Garage load failed");
+                        ServerSend.DisconnectPlayer("Garage failure", _from);
                         return;
                     }
-
-                    byte[] bytes = _packet.ReadBytes(bytecount);
-                    Console.WriteLine($"Garage Save bytes: {bytes.Length}");
-                    SaveList glist = new SaveList();
-                    try
-                    {
-                        glist = ServerData.DeserialiseGarage(bytes);
-
-                    }
-                    catch (Exception x)
-                    {
-                        Console.WriteLine("Error Deserializing Garage Save : " + x);
-                        ServerSend.DisconnectPlayer("Error with Garage Save", _from);
-                        return;
-                    }
-
 
                     try
                     {
 
-                        // Parkbuilder
+                        // Parkbuilder ----------------------------------------------------------
 
                         int Objectcount = _packet.ReadInt();
 
@@ -240,7 +228,9 @@ namespace FrostyPipeServer.ServerFiles
                         _player.Gear.RiderTextures = RiderTexnames;
                     }
                     _player.Gear.Capforward = capforward;
-                    _player.Gear.Garagesave = bytes;
+                    _player.Gear.Garagesave = glist;
+                    _player.Gear.garagexml = xmlgaragestring;
+                    _player.Gear.presetname = presetname;
                     _player.RiderRootPosition = pos;
                     _player.RiderRootRotation = rot;
 
@@ -269,7 +259,7 @@ namespace FrostyPipeServer.ServerFiles
                             {
                                 int indexer = mesh.fileName.LastIndexOf("/");
                                 string shortname = mesh.fileName.Remove(0, indexer + 1);
-                                string dir = "PIPE_Data/GarageContent/" + mesh.fileName;
+                                string dir = ServerData.Garagepath + mesh.fileName;
                                 dir = dir.Replace(shortname, "");
 
                                 ServerData.FileCheckAndRequest(shortname, _from, dir);
@@ -349,7 +339,7 @@ namespace FrostyPipeServer.ServerFiles
             {
                 if (Server.Players.TryGetValue(_from, out Player _player))
                 {
-                    Console.WriteLine($"Receive all parts error: player {_player.Username} : V {_player.VersionNo} : garagesave {_player.Gear.Garagesave.Length} : {_player.Gear.RiderTextures.Count} : error {x}");
+                    Console.WriteLine($"Receive all parts error: player {_player.Username} : error {x}");
                 }
 
                 Console.WriteLine($"Receive all parts error: {x}");
@@ -598,17 +588,20 @@ namespace FrostyPipeServer.ServerFiles
             {
                 // bike ( garage )
 
-                int bytecount = _packet.ReadInt();
-                byte[] bytes = _packet.ReadBytes(bytecount);
-                player.Gear.Garagesave = bytes;
+                string xmlgaragestring = _packet.ReadString();
+                string presetname = _packet.ReadString();
+                Console.WriteLine($"Garage Save string: " + xmlgaragestring);
+                bool success = Servermanager.SaveGaragePreset(xmlgaragestring, _from, presetname);
+                SaveList glist = Servermanager.GarageDeserialize(presetname, _from);
+                player.Gear.Garagesave = glist;
+                player.Gear.presetname = presetname;
+                player.Gear.garagexml = xmlgaragestring;
 
-                SaveList glist = new SaveList();
-                glist = ServerData.DeserialiseGarage(bytes);
 
-                if (glist != null && glist.partMeshes != null)
+                if (player.Gear.Garagesave != null && player.Gear.Garagesave.partMeshes != null)
                 {
 
-                    foreach (PartMesh mesh in glist.partMeshes)
+                    foreach (PartMesh mesh in player.Gear.Garagesave.partMeshes)
                     {
                         if (mesh.isCustom)
                         {
@@ -622,9 +615,9 @@ namespace FrostyPipeServer.ServerFiles
                     }
                 }
 
-                if (glist != null && glist.partTextures != null)
+                if (player.Gear.Garagesave != null && player.Gear.Garagesave.partTextures != null)
                 {
-                    foreach (PartTexture tex in glist.partTextures)
+                    foreach (PartTexture tex in player.Gear.Garagesave.partTextures)
                     {
                         if (tex.url.ToLower().Contains("frostypgamemanager"))
                         {
@@ -674,9 +667,8 @@ namespace FrostyPipeServer.ServerFiles
                 }
                 else
                 {
-                    ServersPacket.Write(player.Gear.Garagesave.Length);
-                    ServersPacket.Write(player.Gear.Garagesave);
-
+                    ServersPacket.Write(player.Gear.garagexml);
+                    ServersPacket.Write(player.Gear.presetname);
                 }
 
 
@@ -962,7 +954,6 @@ namespace FrostyPipeServer.ServerFiles
 
         }
 
-
         public static void DestroyObject(uint _ownerID, Packet _packet)
         {
 
@@ -1000,7 +991,6 @@ namespace FrostyPipeServer.ServerFiles
 
 
         }
-
 
         public static void MoveObject(uint _ownerID, Packet _packet)
         {

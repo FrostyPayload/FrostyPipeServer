@@ -46,6 +46,8 @@ namespace FrostyPipeServer.ServerFiles
         public bool AdminStream = false;
         public Stopwatch AdminStreamWatch = new Stopwatch();
         public int ping;
+        public List<DateTime> receiveTimes = new List<DateTime>();
+        public int Packetrate;
 
 
         /// <summary>
@@ -129,7 +131,9 @@ namespace FrostyPipeServer.ServerFiles
         public bool isRiderUpdate;
         public List<TextureInfo> RiderTextures;
         public bool Capforward;
-        public byte[] Garagesave;
+        public SaveList Garagesave;
+        public string garagexml;
+        public string presetname;
 
 
 
@@ -149,7 +153,6 @@ namespace FrostyPipeServer.ServerFiles
         public GearUpdate()
         {
             RiderTextures = new List<TextureInfo>();
-            Garagesave = new byte[1];
         }
 
     }

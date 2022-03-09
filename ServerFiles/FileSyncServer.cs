@@ -15,7 +15,7 @@ namespace FrostyPipeServer.ServerFiles
     class FileSyncServer
     {
 
-        public void Update()
+        public static void Update()
         {
             bool AddedAPacket = false;
             foreach (SendReceiveIndex Index in ServerData.OutgoingIndexes.ToArray())

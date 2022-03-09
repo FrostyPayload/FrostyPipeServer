@@ -1,5 +1,5 @@
 ﻿
-
+//tell server to reload
 function SendReloadConfig() {
     const xhttp = new XMLHttpRequest();
     xhttp.onload = function () {
@@ -8,7 +8,7 @@ function SendReloadConfig() {
     xhttp.open("GET", "/reloadconfig", true);
     xhttp.send();
 }
-
+//get current config
 function GetServerConfig() {
     const xhttp = new XMLHttpRequest();
     xhttp.onload = function () {
@@ -23,6 +23,7 @@ function GetServerConfig() {
         document.getElementById("KEY").innerText = obj["KEY"];
         document.getElementById("Servername").innerText = obj["Servername"];
         document.getElementById("public").checked = obj["Publicise"]
+        document.getElementById("portal").innerText = obj["PortalUrl"]
     }
     xhttp.open("GET", "/serverconfig", true);
     xhttp.send();
@@ -51,7 +52,8 @@ function ApplyConfigChanges() {
         "PUT": document.getElementById("PUT").innerText,
         "KEY": document.getElementById("KEY").innerText,
         "Servername": document.getElementById("Servername").innerText,
-        "Publicise": document.getElementById("public").checked
+        "Publicise": document.getElementById("public").checked,
+        "PortalUrl": document.getElementById("portal").innerText
     }
     var js = JSON.stringify(jsonconfig);
     xhttp.setRequestHeader("jsonconfig", js);
@@ -68,6 +70,12 @@ function GetServerStats() {
         document.getElementById("players").innerText = obj["players"];
         document.getElementById("lastlooprec").innerText = obj["lastlooprec"];
         document.getElementById("lastloopsen").innerText = obj["lastloopsen"];
+        document.getElementById("lastloopsentimeout").innerText = obj["lastloopsentimeout"];
+        document.getElementById("lastlooprectimeout").innerText = obj["lastlooprectimeout"];
+        document.getElementById("bytesout").innerText = obj["bytesout"];
+        document.getElementById("bytesin").innerText = obj["bytesin"];
+        document.getElementById("avping").innerText = obj["avping"];
+
 
     }
     xhttp.open("GET", "/serverstats", true);
